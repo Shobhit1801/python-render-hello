@@ -257,7 +257,7 @@ def say_hello():
 def classifier_api(file_dict, client_id):
     file_list = []
     # download files using presigned urls
-    for file_id,url in file_dict
+    for file_id, url in file_dict.items():
         file_list.append(extract_text_from_url(url))
     # fetch client info from supabase db
     client_info = fetch_supabase_db(client_id)
