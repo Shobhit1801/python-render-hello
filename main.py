@@ -190,8 +190,7 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
 
     return results_df
 
-def extract_text(pdf_path):
-    doc = fitz.open(pdf_path)
+def extract_text(doc):
     all_lines = []
     for page in doc:
         text = page.get_text("text")
@@ -202,6 +201,16 @@ def extract_text(pdf_path):
     extracted_text = "\n".join(all_lines)
     return extracted_text
 
+def extract_text_from_url(pdf_url):
+    # Download PDF to temp file
+    response = requests.get(pdf_url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to download PDF: {response.status_code}")
+
+    pdf_bytes = response.content
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    return extract_text(doc)
+        
 def pdf_to_csv(extracted_text, client):
 
     # Construct the prompt
@@ -245,6 +254,8 @@ def say_hello():
 @app.get("/classifier")
 def classifier_api(file_dict, client_id):
     # download files using presigned urls
+    for file_id,url in file_di
+    extract_text_from_url(file_dict
     # fetch client info from supabase db
     # call classifier_main - async call
     # return true or false
@@ -259,7 +270,7 @@ def classifier_main(file_list, name, mob_no):
     model = "deepseek/deepseek-chat-v3.1:free"
     for file in file_list:
         if (file.lower().endswith(".pdf")):
-            extracted_text = extract_text(file)
+            extracted_text = extract_text(fitz.open(file))
             df = pdf_to_csv(extracted_text, client)
             res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
         elif (file.lower().endswith(".csv")):
