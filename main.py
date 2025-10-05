@@ -5,6 +5,7 @@ import tiktoken
 import json
 import re
 import fitz
+import os
 
 def safe_parse_json(raw):
     """
@@ -253,7 +254,7 @@ def classifier_main(file_list, name, mob_no):
     ## deepseek
     client = OpenAI(
       base_url= "https://openrouter.ai/api/v1",
-      api_key= "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", # Deepseek free chat
+      api_key= os.getenv("OPENAI_API_KEY"), # Deepseek free chat
     )
     model = "deepseek/deepseek-chat-v3.1:free"
     for file in file_list:
