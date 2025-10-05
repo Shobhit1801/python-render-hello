@@ -3,6 +3,4 @@ uvicorn
 pandas
 openai
 tiktoken
-json
-re
-fitz
+PyMuPDF
