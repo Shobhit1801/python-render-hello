@@ -242,6 +242,12 @@ def say_hello():
     return {"message": "Hello from the named API!"}
 
 @app.get("/classifier")
+def classifier_api(file_dict, client_id):
+    # download files using presigned urls
+    # fetch client info from supabase db
+    # call classifier_main - async call
+    # return true or false
+    
 def classifier_main(file_list, name, mob_no):
     res_final = pd.DataFrame() 
     ## deepseek
@@ -261,5 +267,9 @@ def classifier_main(file_list, name, mob_no):
 
         res_final = pd.concat([res_final, res], ignore_index=True)
             
+    
+    # convert response to webhook event type
+    # invoke webhook event
+
     return res_final
 
