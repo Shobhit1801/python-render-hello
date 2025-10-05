@@ -243,6 +243,24 @@ def pdf_to_csv(extracted_text, client):
     
     return df
 
+def df_to_event_list(df):
+    # Select required columns and convert to list of dicts
+    required_cols = ['category', 'confidence', 'reason']
+    event_list = df[required_cols].to_dict(orient='records')
+    return event_list
+
+def invoke_webhook(event_list):
+    webhook_url = "https://your-vercel-app.vercel.app/api/process_ai_events"
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(webhook_url, json={"events": event_list}, headers=headers)
+
+    if response.status_code == 200:
+        print("Webhook successfully invoked.")
+    else:
+        print(f"Webhook invocation failed: {response.status_code} - {response.text}")
+
+
 app = FastAPI()
 
 @app.get("/")
@@ -288,6 +306,8 @@ def classifier_main(file_list, name, mob_no):
     
     # convert response to webhook event type
     # invoke webhook event
+    event_list = df_to_event_list(res_final)
+    invoke_webhook(event_list)
 
     return res_final
 
