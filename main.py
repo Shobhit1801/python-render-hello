@@ -97,7 +97,7 @@ def safe_parse_json(raw):
             return None
 
 # --- Batch categorization function with confidence and date ---
-def categorize_transactions_batch(df, amount_threshold=100, batch_size=20, model="gpt-4o-mini", person_name='Abhishek', mobile_numbers = '7206527787'):
+def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=20, model="gpt-4o-mini", person_name='Abhishek', mobile_numbers = '7206527787'):
     """
     Categorize transactions using LLM in batches with confidence scores.
     Handles 'Narration', 'Credit Amount', 'Debit Amount', and 'Date' columns.
@@ -201,7 +201,7 @@ def extract_text(pdf_path):
     extracted_text = "\n".join(all_lines)
     return extracted_text
 
-def pdf_to_csv(extracted_text):
+def pdf_to_csv(extracted_text, client):
 
     # Construct the prompt
     prompt = f"""
@@ -244,12 +244,17 @@ def say_hello():
 @app.get("/classifier")
 def classifier_main(file_list, name, mob_no):
     res_final = pd.DataFrame() 
-    
+    ## deepseek
+    client = OpenAI(
+      base_url= "https://openrouter.ai/api/v1",
+      api_key= "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", # Deepseek free chat
+    )
+    model = "deepseek/deepseek-chat-v3.1:free"
     for file in file_list:
         if (file.lower().endswith(".pdf")):
             extracted_text = extract_text(file)
-            df = pdf_to_csv(extracted_text)
-            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
+            df = pdf_to_csv(extracted_text, client)
+            res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
         elif (file.lower().endswith(".csv")):
             df = pd.read_csv(file)
             res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
