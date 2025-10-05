@@ -253,9 +253,10 @@ def say_hello():
 
 @app.get("/classifier")
 def classifier_api(file_dict, client_id):
+    file_list = []
     # download files using presigned urls
-    for file_id,url in file_di
-    extract_text_from_url(file_dict
+    for file_id,url in file_dict
+        file_list.append(extract_text_from_url(url))
     # fetch client info from supabase db
     # call classifier_main - async call
     # return true or false
