@@ -6,6 +6,8 @@ import json
 import re
 import fitz
 import os
+from supabase_client import fetch_supabase_db
+
 
 def safe_parse_json(raw):
     """
@@ -258,8 +260,11 @@ def classifier_api(file_dict, client_id):
     for file_id,url in file_dict
         file_list.append(extract_text_from_url(url))
     # fetch client info from supabase db
+    client_info = fetch_supabase_db(client_id)
     # call classifier_main - async call
+    classifier_main(file_list, client_info.first_name, client_info.phone_number)
     # return true or false
+    return true
     
 def classifier_main(file_list, name, mob_no):
     res_final = pd.DataFrame() 
