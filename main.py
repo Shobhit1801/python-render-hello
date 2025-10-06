@@ -246,10 +246,17 @@ def pdf_to_csv(extracted_text, client):
     
     return df
 
-def df_to_event_list(df):
+def df_to_event_list(df, client_id, file_id, accountant_id):
     # Select required columns and convert to list of dicts
     required_cols = ['category', 'confidence', 'reason']
     event_list = df[required_cols].to_dict(orient='records')
+
+    # Add additional info to each event object
+    for event in event_list:
+        event['client_id'] = client_id
+        event['file_id'] = file_id
+        event['accountant_id'] = accountant_id
+
     return event_list
 
 def generate_hmac_sha256_signature(secret_key, message):
@@ -295,19 +302,19 @@ def say_hello():
     return {"message": "Hello from the named API!"}
 
 @app.post("/classifier")
-def classifier_api(file_dict, client_id):
+def classifier_api(request):
     file_list = []
     # download files using presigned urls
-    for file_id, url in file_dict.items():
-        file_list.append(extract_text_from_url(url))
+    # for file_id, url in file_dict.items():
+    file_list.append(extract_text_from_url(request.signed_url))
     # fetch client info from supabase db
-    client_info = fetch_supabase_db(client_id)
+    client_info = fetch_supabase_db(request.client_id)
     # call classifier_main - async call
-    classifier_main(file_list, client_info.first_name, client_info.phone_number)
+    classifier_main(file_list, client_info.first_name, client_info.phone_number, request.client_id, request.file_id, request.accountant_id)
     # return true or false
     return true
     
-def classifier_main(file_list, name, mob_no):
+def classifier_main(file_list, name, mob_no, client_id, file_id, accountant_id):
     res_final = pd.DataFrame() 
     ## deepseek
     client = OpenAI(
@@ -329,7 +336,7 @@ def classifier_main(file_list, name, mob_no):
     
     # convert response to webhook event type
     # invoke webhook event
-    event_list = df_to_event_list(res_final)
+    event_list = df_to_event_list(res_final, client_id, file_id, accountant_id)
     invoke_webhook(event_list)
 
     return res_final
