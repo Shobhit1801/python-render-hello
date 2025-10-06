@@ -337,7 +337,7 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     model = "deepseek/deepseek-chat-v3.1:free"
     for file in file_list:
         df = pdf_to_csv(file, client, model)
-        res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
+        res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
 
         res_final = pd.concat([res_final, res], ignore_index=True)
             
