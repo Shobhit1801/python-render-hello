@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from openai import OpenAI
 import tiktoken
@@ -261,7 +262,7 @@ def generate_hmac_sha256_signature(secret_key, message):
     return signature
 
 def invoke_webhook(event_list):
-    webhook_url = "https://statement-classifier-buzb8gi2t-jais-projects-e905532d.vercel.app/transactions/webhook"
+    webhook_url = "https://statement-classifier.vercel.app/transactions/webhook"
     raw_json_string = json.dumps(event_list, separators=(',', ':'))
     signature = generate_hmac_sha256_signature(os.getenv("WEBHOOK_SIGNATURE_KEY"), raw_json_string)
     headers = {"Content-Type": "application/json", "x-signature": signature}
@@ -275,6 +276,15 @@ def invoke_webhook(event_list):
 
 
 app = FastAPI()
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins; replace with specific origins in production
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 @app.get("/")
 def read_root():
