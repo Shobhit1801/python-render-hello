@@ -11,6 +11,7 @@ import hmac
 import hashlib
 from supabase_client import fetch_supabase_db, fetch_supabase_cat_db
 from pydantic import BaseModel
+import requests
 
 
 def safe_parse_json(raw):
