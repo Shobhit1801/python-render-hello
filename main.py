@@ -9,7 +9,7 @@ import fitz
 import os
 import hmac
 import hashlib
-from supabase_client import fetch_supabase_db
+from supabase_client import fetch_supabase_db, fetch_supabase_cat_db
 
 
 def safe_parse_json(raw):
@@ -245,17 +245,21 @@ def pdf_to_csv(extracted_text, client):
     df = pd.read_csv("bank_statement_parsed.csv")
     
     return df
-
+    
 def df_to_event_list(df, client_id, file_id, accountant_id):
     # Select required columns and convert to list of dicts
     required_cols = ['category', 'confidence', 'reason']
     event_list = df[required_cols].to_dict(orient='records')
 
+    cat_id_map = fetch_supabase_cat_db()
+    name_to_id_map = {item['name']: item['id'] for item in cat_id_map}
     # Add additional info to each event object
     for event in event_list:
         event['client_id'] = client_id
         event['file_id'] = file_id
         event['accountant_id'] = accountant_id
+        event['category_id'] = name_to_id_map[event['category']]
+        del event['category']
 
     return event_list
 
