@@ -251,7 +251,7 @@ def pdf_to_csv(extracted_text, client, model):
     
 def df_to_event_list(df, client_id, file_id, accountant_id):
     # Select required columns and convert to list of dicts
-    required_cols = ['category', 'confidence', 'reason']
+    required_cols = ['Category', 'Confidence', 'Reason']
     event_list = df[required_cols].to_dict(orient='records')
 
     cat_id_map = fetch_supabase_cat_db()
@@ -261,8 +261,8 @@ def df_to_event_list(df, client_id, file_id, accountant_id):
         event['client_id'] = client_id
         event['file_id'] = file_id
         event['accountant_id'] = accountant_id
-        event['category_id'] = name_to_id_map[event['category']]
-        del event['category']
+        event['category_id'] = name_to_id_map[event['Category']]
+        del event['Category']
 
     return event_list
 
