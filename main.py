@@ -6,6 +6,8 @@ import json
 import re
 import fitz
 import os
+import hmac
+import hashlib
 from supabase_client import fetch_supabase_db
 
 
@@ -249,9 +251,20 @@ def df_to_event_list(df):
     event_list = df[required_cols].to_dict(orient='records')
     return event_list
 
+def generate_hmac_sha256_signature(secret_key, message):
+    # Convert both secret and message to bytes
+    key_bytes = secret_key.encode('utf-8')
+    message_bytes = message.encode('utf-8')
+
+    # Create HMAC SHA256 signature
+    signature = hmac.new(key_bytes, message_bytes, hashlib.sha256).hexdigest()
+    return signature
+
 def invoke_webhook(event_list):
-    webhook_url = "https://your-vercel-app.vercel.app/api/process_ai_events"
-    headers = {"Content-Type": "application/json"}
+    webhook_url = "https://statement-classifier-buzb8gi2t-jais-projects-e905532d.vercel.app/transactions/webhook"
+    raw_json_string = json.dumps(event_list, separators=(',', ':'))
+    signature = generate_hmac_sha256_signature(os.getenv("WEBHOOK_SIGNATURE_KEY"), raw_json_string)
+    headers = {"Content-Type": "application/json", "x-signature": signature}
 
     response = requests.post(webhook_url, json={"events": event_list}, headers=headers)
 
