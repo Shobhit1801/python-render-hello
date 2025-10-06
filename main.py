@@ -12,6 +12,7 @@ import hashlib
 from supabase_client import fetch_supabase_db, fetch_supabase_cat_db
 from pydantic import BaseModel
 import requests
+import asyncio
 
 
 def safe_parse_json(raw):
@@ -218,7 +219,7 @@ def extract_text_from_url(pdf_url):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     return extract_text(doc)
         
-def pdf_to_csv(extracted_text, client):
+def pdf_to_csv(extracted_text, client, model):
 
     # Construct the prompt
     prompt = f"""
@@ -314,7 +315,7 @@ class ClassifierRequest(BaseModel):
     accountant_id: str
     
 @app.post("/classifier")
-def classifier_api(request: ClassifierRequest):
+async def classifier_api(request: ClassifierRequest):
     file_list = []
     # download files using presigned urls
     # for file_id, url in file_dict.items():
@@ -322,11 +323,11 @@ def classifier_api(request: ClassifierRequest):
     # fetch client info from supabase db
     client_info = fetch_supabase_db(request.client_id)
     # call classifier_main - async call
-    classifier_main(file_list, client_info.first_name, client_info.phone_number, request.client_id, request.file_id, request.accountant_id)
+    asyncio.create_task(classifier_main(file_list, client_info.first_name, client_info.phone_number, request.client_id, request.file_id, request.accountant_id))
     # return true or false
-    return true
+    return True
     
-def classifier_main(file_list, name, mob_no, client_id, file_id, accountant_id):
+async def classifier_main(file_list, name, mob_no, client_id, file_id, accountant_id):
     res_final = pd.DataFrame() 
     ## deepseek
     client = OpenAI(
@@ -335,13 +336,8 @@ def classifier_main(file_list, name, mob_no, client_id, file_id, accountant_id):
     )
     model = "deepseek/deepseek-chat-v3.1:free"
     for file in file_list:
-        if (file.lower().endswith(".pdf")):
-            extracted_text = extract_text(fitz.open(file))
-            df = pdf_to_csv(extracted_text, client)
-            res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
-        elif (file.lower().endswith(".csv")):
-            df = pd.read_csv(file)
-            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
+        df = pdf_to_csv(file, client, model)
+        res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
 
         res_final = pd.concat([res_final, res], ignore_index=True)
             
