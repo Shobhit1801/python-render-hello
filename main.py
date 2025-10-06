@@ -323,7 +323,7 @@ async def classifier_api(request: ClassifierRequest):
     # fetch client info from supabase db
     client_info = fetch_supabase_db(request.client_id)
     # call classifier_main - async call
-    asyncio.create_task(classifier_main(file_list, client_info.first_name, client_info.phone_number, request.client_id, request.file_id, request.accountant_id))
+    asyncio.create_task(classifier_main(file_list, client_info['first_name'], client_info['phone_number'], request.client_id, request.file_id, request.accountant_id))
     # return true or false
     return True
     
