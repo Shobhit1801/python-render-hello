@@ -10,6 +10,7 @@ import os
 import hmac
 import hashlib
 from supabase_client import fetch_supabase_db, fetch_supabase_cat_db
+from pydantic import BaseModel
 
 
 def safe_parse_json(raw):
@@ -305,8 +306,14 @@ def read_root():
 def say_hello():
     return {"message": "Hello from the named API!"}
 
+class ClassifierRequest(BaseModel):
+    client_id: str
+    signed_url: str
+    file_id: str
+    accountant_id: str
+    
 @app.post("/classifier")
-def classifier_api(request):
+def classifier_api(request: ClassifierRequest):
     file_list = []
     # download files using presigned urls
     # for file_id, url in file_dict.items():
