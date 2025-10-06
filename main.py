@@ -294,7 +294,7 @@ def read_root():
 def say_hello():
     return {"message": "Hello from the named API!"}
 
-@app.get("/classifier")
+@app.post("/classifier")
 def classifier_api(file_dict, client_id):
     file_list = []
     # download files using presigned urls
