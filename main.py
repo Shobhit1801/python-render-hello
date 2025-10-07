@@ -13,6 +13,14 @@ from supabase_client import fetch_supabase_db, fetch_supabase_cat_db, upsert_cat
 from pydantic import BaseModel
 import requests
 import asyncio
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # Set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 
 def safe_parse_json(raw):
@@ -284,16 +292,20 @@ def generate_hmac_sha256_signature(secret_key, message):
     return signature
 
 def invoke_webhook(event_list):
+    logger.info("Starting invoke webhook")
     webhook_url = "https://statement-classifier.vercel.app/transactions/webhook"
     raw_json_string = json.dumps(event_list, separators=(',', ':'))
     signature = generate_hmac_sha256_signature(os.getenv("WEBHOOK_SIGNATURE_KEY"), raw_json_string)
     headers = {"Content-Type": "application/json", "x-signature": signature}
 
+    logger.info("Invoking webhook event")
     response = requests.post(webhook_url, json={"events": event_list}, headers=headers)
 
     if response.status_code == 200:
+        logger.info("Webhook success")
         print("Webhook successfully invoked.")
     else:
+        logger.info("Invoking webhook event failed")
         print(f"Webhook invocation failed: {response.status_code} - {response.text}")
 
 
@@ -352,6 +364,7 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     
     # convert response to webhook event type
     # invoke webhook event
+    logger.info("LLM invocation done. Converting df to event list")
     event_list = df_to_event_list(res_final, client_id, file_id, accountant_id)
     invoke_webhook(event_list)
 
