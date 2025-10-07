@@ -266,7 +266,11 @@ def df_to_event_list(df, client_id, file_id, accountant_id):
             name_to_id_map[event['Category']] = res.data[0]['id']
             
         event['category_id'] = name_to_id_map[event['Category']]
+        event['confidence'] = event['Confidence']
+        event['reason'] = event['Reason']
         del event['Category']
+        del event['Confidence']
+        del event['Reason']
 
     return event_list
 
