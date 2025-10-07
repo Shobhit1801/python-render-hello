@@ -28,3 +28,16 @@ def fetch_supabase_cat_db():
     return client_info
   else:
     return -1;
+
+def upsert_category(category_names):
+    """
+    Upsert (insert or update) categories by name only.
+    category_names: list of strings (category names)
+    """
+    # Prepare list of dicts for upsert, matching table columns
+    rows = [{"name": name} for name in category_names]
+    response = supabase.table('categories').upsert(rows).execute()
+    if response.data:
+        return response.data
+    else:
+        return None
