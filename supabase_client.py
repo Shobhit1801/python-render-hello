@@ -20,7 +20,7 @@ def fetch_supabase_db(client_id):
 
 def fetch_supabase_cat_db():
   # Initialize client
-  
+  supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
   response = supabase.table('categories').select('*').execute()
   if response.data:
