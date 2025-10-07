@@ -9,7 +9,7 @@ import fitz
 import os
 import hmac
 import hashlib
-from supabase_client import fetch_supabase_db, fetch_supabase_cat_db
+from supabase_client import fetch_supabase_db, fetch_supabase_cat_db, upsert_category
 from pydantic import BaseModel
 import requests
 import asyncio
