@@ -305,7 +305,7 @@ def invoke_webhook(event_list):
         logger.info("Webhook success")
         print("Webhook successfully invoked.")
     else:
-        logger.info("Invoking webhook event failed")
+        logger.error(f"Webhook invocation failed with status code {response.status_code} - Response: {response.text}")
         print(f"Webhook invocation failed: {response.status_code} - {response.text}")
 
 
