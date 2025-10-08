@@ -184,7 +184,9 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
         """
 
         # Optional: print token length
-        print("🔹 Prompt token length:", count_tokens(prompt, model="gpt-4o-mini"))
+        prompt_length = count_tokens(prompt, model="gpt-4o-mini")
+        print("🔹 Prompt token length:", prompt_length)
+        logger.info("Prompt length for main classifier call: {prompt_length}")
 
         # LLM call
         response = client.chat.completions.create(
@@ -195,11 +197,14 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
 
         # Parse JSON output
         raw_output = response.choices[0].message.content
+        logger.info("LLM response generated from main classifier")
         batch_results = safe_parse_json(raw_output)
         if batch_results:
             results.extend(batch_results)
+            logger.info("Success to parse JSON for the batch from main classifier")
         else:
             print("⚠️ Failed to parse JSON for batch. Raw output:", raw_output)
+            logger.info("Failed to parse JSON for the batch from main classifier")
 
     # Convert results to DataFrame
     results_df = pd.DataFrame(results)
@@ -238,8 +243,9 @@ def pdf_to_csv(extracted_text, client, model):
         Here is the extracted text:
         {extracted_text}
     """
-    
-    print("🔹 Prompt token length:", count_tokens(prompt, model="gpt-4o-mini"))
+    prompt_length = count_tokens(prompt, model="gpt-4o-mini")
+    print("🔹 Prompt token length:", prompt_length)
+    logger.info("Prompt length for converting pdf to csv: {prompt_length}")
     
     # Make the OpenAI API call
     response = client.chat.completions.create(
@@ -250,10 +256,12 @@ def pdf_to_csv(extracted_text, client, model):
     
     # Extract the CSV from the response
     csv_output = response.choices[0].message.content
+    logger.info("LLM response generated for pdf to csv")
     # Save to CSV
     with open("bank_statement_parsed.csv", "w", encoding="utf-8") as f:
         f.write(csv_output)
     df = pd.read_csv("bank_statement_parsed.csv")
+    logger.info("PDF to csv file written and read to return df")
     
     return df
     
@@ -279,7 +287,7 @@ def df_to_event_list(df, client_id, file_id, accountant_id):
         del event['Category']
         del event['Confidence']
         del event['Reason']
-
+    
     return event_list
 
 def generate_hmac_sha256_signature(secret_key, message):
@@ -378,5 +386,23 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     event_list = df_to_event_list(res_final, client_id, file_id, accountant_id)
     invoke_webhook(event_list)
 
+    return res_final
+
+
+
+def classifier_main(file_list, name, mob_no):
+    res_final = pd.DataFrame() 
+    
+    for file in file_list:
+        if (file.lower().endswith(".pdf")):
+            extracted_text = extract_text(file)
+            df = pdf_to_csv(extracted_text)
+            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
+        elif (file.lower().endswith(".csv")):
+            df = pd.read_csv(file)
+            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
+
+        res_final = pd.concat([res_final, res], ignore_index=True)
+            
     return res_final
 
