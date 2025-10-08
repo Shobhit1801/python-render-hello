@@ -388,21 +388,3 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
 
     return res_final
 
-
-
-def classifier_main(file_list, name, mob_no):
-    res_final = pd.DataFrame() 
-    
-    for file in file_list:
-        if (file.lower().endswith(".pdf")):
-            extracted_text = extract_text(file)
-            df = pdf_to_csv(extracted_text)
-            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
-        elif (file.lower().endswith(".csv")):
-            df = pd.read_csv(file)
-            res = categorize_transactions_batch(df, amount_threshold=150, batch_size=100, model = model, person_name=name, mobile_numbers = mob_no)
-
-        res_final = pd.concat([res_final, res], ignore_index=True)
-            
-    return res_final
-
