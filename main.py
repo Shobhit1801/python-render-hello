@@ -336,6 +336,16 @@ class ClassifierRequest(BaseModel):
     
 @app.post("/classifier")
 async def classifier_api(request: ClassifierRequest):
+    event = {}
+    event['client_id'] = 1
+    event['file_id'] = 2
+    event['accountant_id'] = 3
+    event['category_id'] = 4
+    event['confidence'] = "high"
+    event['reason'] = "test"
+    invoke_webhook([event])
+    return True
+
     file_list = []
     # download files using presigned urls
     # for file_id, url in file_dict.items():
