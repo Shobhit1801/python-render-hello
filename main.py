@@ -300,14 +300,18 @@ def generate_hmac_sha256_signature(secret_key, message):
     return signature
 
 def invoke_webhook(event_list):
+    
+    var_json = {"events": event_list}
+    
     logger.info("Starting invoke webhook")
+    raw_json_string = json.dumps(var_json, separators=(',', ':'))
+    
     webhook_url = "https://statement-classifier.vercel.app/api/transactions/webhook"
-    raw_json_string = json.dumps(event_list, separators=(',', ':'))
     signature = generate_hmac_sha256_signature(os.getenv("WEBHOOK_SIGNATURE_KEY"), raw_json_string)
     headers = {"Content-Type": "application/json", "x-signature": signature}
 
     logger.info("Invoking webhook event")
-    response = requests.post(webhook_url, json={"events": event_list}, headers=headers)
+    response = requests.post(webhook_url, data=raw_json_string, headers=headers)
 
     if response.status_code == 200:
         logger.info("Webhook success")
@@ -344,15 +348,15 @@ class ClassifierRequest(BaseModel):
     
 @app.post("/classifier")
 async def classifier_api(request: ClassifierRequest):
-    event = {}
-    event['client_id'] = 1
-    event['file_id'] = 2
-    event['accountant_id'] = 3
-    event['category_id'] = 4
-    event['confidence'] = "high"
-    event['reason'] = "test"
-    invoke_webhook([event])
-    return True
+    # event = {}
+    # event['client_id'] = 1
+    # event['file_id'] = 2
+    # event['accountant_id'] = 3
+    # event['category_id'] = 4
+    # event['confidence'] = "high"
+    # event['reason'] = "test"
+    # invoke_webhook([event])
+    # return True
 
     file_list = []
     # download files using presigned urls
