@@ -186,7 +186,7 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
         # Optional: print token length
         prompt_length = count_tokens(prompt, model="gpt-4o-mini")
         print("🔹 Prompt token length:", prompt_length)
-        logger.info("Prompt length for main classifier call: {prompt_length}")
+        logger.info(f"Prompt length for main classifier call: {prompt_length}")
 
         # LLM call
         response = client.chat.completions.create(
@@ -196,6 +196,8 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
         )
 
         # Parse JSON output
+        # TODO: REMOVE THIS LOGGING
+        logger.info(f"pdf to csv response: {response}")
         raw_output = response.choices[0].message.content
         logger.info("LLM response generated from main classifier")
         batch_results = safe_parse_json(raw_output)
