@@ -238,10 +238,16 @@ def pdf_to_csv(extracted_text, client, model):
 
     # Construct the prompt
     prompt = f"""
-    You are an AI assistant specialized in parsing bank statements. 
-        Extract all transactions into CSV with relevant columns: Date,Narration,Debit Amount, Credit Amount
-        Combine multi-line narrations. Ignore headers/footers.
-        Output the result **only** as CSV. Do not add explanations, quotes, or Markdown.
+        You are an AI assistant specialized in parsing bank statements.
+        Your task is to extract all transactions into strictly the following CSV columns:
+        Date,Narration,Debit Amount,Credit Amount
+
+        Guidelines:
+        - Output ONLY raw CSV, NO explanations or Markdown.
+        - The FIRST LINE must be the header: Date,Narration,Debit Amount,Credit Amount
+        - Each row should ONLY be: Date,Narration,Debit Amount,Credit Amount
+        - Leave fields blank if data not available, but keep all four columns.
+
         Here is the extracted text:
         {extracted_text}
     """
