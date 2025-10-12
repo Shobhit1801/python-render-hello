@@ -372,7 +372,7 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     ## deepseek
     client = OpenAI(
         base_url= "https://api.deepseek.com",
-        api_key= "sk-b4112b3d1ad1469686e4b130f6077e7d", # Deepseek free chat
+        api_key= os.getenv("OPENAI_API_KEY"), # Deepseek free chat
     )
     model = "deepseek-chat"
 
