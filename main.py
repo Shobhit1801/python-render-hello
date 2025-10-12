@@ -192,7 +192,7 @@ def categorize_transactions_batch(client, df, amount_threshold=100, batch_size=2
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=15000,
+            max_tokens=8000,
         )
 
         # Parse JSON output
@@ -259,7 +259,7 @@ def pdf_to_csv(extracted_text, client, model):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=15000  
+        max_tokens=8000  
     )
     
     # Extract the CSV from the response
@@ -356,16 +356,6 @@ class ClassifierRequest(BaseModel):
     
 @app.post("/classifier")
 async def classifier_api(request: ClassifierRequest):
-    # event = {}
-    # event['client_id'] = 1
-    # event['file_id'] = 2
-    # event['accountant_id'] = 3
-    # event['category_id'] = 4
-    # event['confidence'] = "high"
-    # event['reason'] = "test"
-    # invoke_webhook([event])
-    # return True
-
     file_list = []
     # download files using presigned urls
     # for file_id, url in file_dict.items():
@@ -381,10 +371,11 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     res_final = pd.DataFrame() 
     ## deepseek
     client = OpenAI(
-      base_url= "https://openrouter.ai/api/v1",
-      api_key= os.getenv("OPENAI_API_KEY"), # Deepseek free chat
+        base_url= "https://api.deepseek.com",
+        api_key= "sk-b4112b3d1ad1469686e4b130f6077e7d", # Deepseek free chat
     )
-    model = "deepseek/deepseek-chat-v3.1:free"
+    model = "deepseek-chat"
+
     for file in file_list:
         df = pdf_to_csv(file, client, model)
         res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
