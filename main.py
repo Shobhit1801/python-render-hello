@@ -275,7 +275,7 @@ def pdf_to_csv(file_response, client, model):
     
     return df
 
-def csv_col_identify(cols, model):
+def csv_col_identify(cols, client, model):
     """
     Identify the columns for various bank statements.
     Handles 'Narration', 'Credit Amount', 'Debit Amount', and 'Date' columns.
@@ -436,7 +436,7 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
         else:
             df = pd.read_csv(io.StringIO(file.content.decode('utf-8')))
             ## columns intent
-            map = csv_col_identify(df.columns)
+            map = csv_col_identify(df.columns, client, model)
             df = df.rename(columns=map)
             # Step 2: Keep only columns present in mapping
             df = df[[col for col in map.values() if col in df.columns]]
