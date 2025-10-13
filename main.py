@@ -272,6 +272,57 @@ def pdf_to_csv(extracted_text, client, model):
     logger.info("PDF to csv file written and read to return df")
     
     return df
+
+def csv_col_identify(cols, model):
+    """
+    Identify the columns for various bank statements.
+    Handles 'Narration', 'Credit Amount', 'Debit Amount', and 'Date' columns.
+    Returns a dictionary mapping each logical name to the actual column name.
+    """
+
+    # Convert column list to string
+    # cols_str = ", ".join(cols)
+    
+    prompt = f"""
+    You are a bank statement structure identifier.
+    Identify which columns from the list below correspond to:
+      - 'Narration' (transaction description)
+      - 'Credit Amount' (incoming money)
+      - 'Debit Amount' (outgoing money)
+      - 'Date' (transaction date)
+    
+    Rules:
+    - If there is only one amount-related column, classify it as 'Debit Amount' and keep 'Credit Amount' as 0.
+    - If you are not sure, make the best guess based on column name semantics (e.g., "cr", "dr", "txn_date", "details").
+    - Return ONLY valid JSON with keys exactly as:
+        {{<column_name>: "Narration", <column_name or 0> : "Credit Amount", <column_name or 0> : "Debit Amount", <column_name> : "Date"}}
+
+    Columns:
+    {cols}
+    """
+
+    # LLM call
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1000,
+    )
+
+    # Extract text content
+    raw_output = response.choices[0].message.content.strip()
+
+    # Remove markdown if present (like ```json ... ```)
+    raw_output = raw_output.replace("```json", "").replace("```", "").strip()
+
+    # Parse into dictionary safely
+    try:
+        mapping = json.loads(raw_output)
+    except json.JSONDecodeError:
+        print("⚠️ Failed to parse JSON from LLM output. Raw output:")
+        print(raw_output)
+        mapping = {}
+
+    return mapping
     
 def df_to_event_list(df, client_id, file_id, accountant_id):
     # Select required columns and convert to list of dicts
@@ -377,9 +428,18 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     model = "deepseek-chat"
 
     for file in file_list:
-        df = pdf_to_csv(file, client, model)
-        res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
-
+        if (file.lower().endswith(".pdf")):
+            df = pdf_to_csv(file, client, model)
+            res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
+        elif (file.lower().endswith(".csv")):
+            df = pd.read_csv(file)
+            ## columns intent
+            map = csv_col_identify(df.columns)
+            df = df.rename(columns=map)
+            # Step 2: Keep only columns present in mapping
+            df = df[[col for col in map.values() if col in df.columns]]
+            res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
+            
         res_final = pd.concat([res_final, res], ignore_index=True)
             
     
