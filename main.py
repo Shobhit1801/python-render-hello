@@ -14,6 +14,7 @@ from pydantic import BaseModel
 import requests
 import asyncio
 import logging
+import io
 
 logging.basicConfig(
     level=logging.INFO,  # Set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -224,17 +225,18 @@ def extract_text(doc):
     extracted_text = "\n".join(all_lines)
     return extracted_text
 
-def extract_text_from_url(pdf_url):
-    # Download PDF to temp file
-    response = requests.get(pdf_url)
+def download_file_from_s3(presigned_url):
+    response = requests.get(presigned_url)
     if response.status_code != 200:
         raise Exception(f"Failed to download PDF: {response.status_code}")
 
-    pdf_bytes = response.content
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    return extract_text(doc)
+    return response
+
         
-def pdf_to_csv(extracted_text, client, model):
+def pdf_to_csv(file_response, client, model):
+    pdf_bytes = file_response.content
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    extracted_text = extract_text(doc)
 
     # Construct the prompt
     prompt = f"""
@@ -410,7 +412,7 @@ async def classifier_api(request: ClassifierRequest):
     file_list = []
     # download files using presigned urls
     # for file_id, url in file_dict.items():
-    file_list.append(extract_text_from_url(request.signed_url))
+    file_list.append(download_file_from_s3(request.signed_url))
     # fetch client info from supabase db
     client_info = fetch_supabase_db(request.client_id)
     # call classifier_main - async call
@@ -428,11 +430,11 @@ async def classifier_main(file_list, name, mob_no, client_id, file_id, accountan
     model = "deepseek-chat"
 
     for file in file_list:
-        if (file.lower().endswith(".pdf")):
+        if "pdf" in file.headers.get("Content-Type", ""):
             df = pdf_to_csv(file, client, model)
             res = categorize_transactions_batch(client, df, amount_threshold=150, batch_size=50, model = model, person_name=name, mobile_numbers = mob_no)
-        elif (file.lower().endswith(".csv")):
-            df = pd.read_csv(file)
+        else:
+            df = pd.read_csv(io.StringIO(file.content.decode('utf-8')))
             ## columns intent
             map = csv_col_identify(df.columns)
             df = df.rename(columns=map)
