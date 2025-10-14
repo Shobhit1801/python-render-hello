@@ -1,8 +1,8 @@
 from supabase import create_client
 
 # Your Supabase URL and API key
-SUPABASE_URL = "https://qvkwfvcievnokpiwzruo.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2a3dmdmNpZXZub2twaXd6cnVvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTU1Njk3MCwiZXhwIjoyMDc1MTMyOTcwfQ.qGPizxCYrt-X8pW_aJN1Yp_c0BGLo6S6ZaRzDMaCu5w"
+SUPABASE_URL = "https://eoyrvbmyvvomwkzxatrg.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVveXJ2Ym15dnZvbXdrenhhdHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMzI4NzMsImV4cCI6MjA3NTkwODg3M30.l5uNO3UfwKERGzCxxCR01pkwj9d_0w6gBZIxVZW6s9c"
 
 def fetch_supabase_db(client_id):
   # Initialize client
