@@ -367,7 +367,7 @@ def invoke_webhook(event_list):
     logger.info("Starting invoke webhook")
     raw_json_string = json.dumps(var_json)
     
-    webhook_url = "https://statement-classifier.vercel.app/api/transactions/webhook"
+    webhook_url = "https://statement-classifier-one.vercel.app/api/transactions/webhook"
     signature = generate_hmac_sha256_signature(os.getenv("WEBHOOK_SIGNATURE_KEY"), raw_json_string)
     headers = {"Content-Type": "application/json", "x-signature": signature}
 
